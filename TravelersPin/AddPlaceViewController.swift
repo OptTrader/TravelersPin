@@ -94,8 +94,14 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   
   // This method lets you configure a view controller before it's presented
   
-  
-  
+  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
+  {
+    if saveButton === sender
+    {
+      savePlace()
+    }
+  }
+
   // MARK: Actions
   
   @IBAction func selectImageFromPhotoLibrary(sender: UITapGestureRecognizer)
@@ -115,51 +121,18 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
     imagePickerController.delegate = self
     
     presentViewController(imagePickerController, animated: true, completion: nil)
-    
   }
   
-  
-  
+  func savePlace()
+  {
+    let newPlace = PlaceItem()
+    newPlace.name = nameTextField.text!
+    newPlace.location = locationTextField.text!
+    newPlace.comment = commentTextField.text!
+    newPlace.photo = UIImagePNGRepresentation(photoImageView.image!)
+    newPlace.rating = ratingControl.rating
+    
+    PlaceDataController.savePlace(newPlace)
+  }
   
 }
-
-//  
-//  
-//  
-//  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
-//  {
-//    if saveButton === sender
-//    {
-//      savePlace()
-//      
-//      //      let name = nameTextField.text ?? ""
-//      //      let comment = commentTextField.text ?? ""
-//      //      let photo = photoImageView.image
-//      //      let rating = ratingControl.rating
-//      
-//      // Set the place to be passed to PlaceTableViewController after the unwind segue
-//      //      place = Place(name: name, comment: comment, photo: photo, rating: rating)
-//    }
-//  }
-//  
-
-//  
-//  func savePlace()
-//  {
-//    //    let name = nameTextField.text ?? ""
-//    //    let location = locationTextField.text ?? ""
-//    //    let comment = commentTextField.text ?? ""
-//    //    let photo = UIImagePNGRepresentation(photoImageView.image!)
-//    //    let rating = ratingControl.rating
-//    
-//    let newPlace = PlaceItem()
-//    newPlace.name = nameTextField.text!
-//    newPlace.location = locationTextField.text!
-//    newPlace.comment = commentTextField.text!
-//    newPlace.photo = UIImagePNGRepresentation(photoImageView.image!)
-//    newPlace.rating = ratingControl.rating
-//    
-//    PlaceDataController.savePlace(newPlace)
-//  }
-//  
-//}
