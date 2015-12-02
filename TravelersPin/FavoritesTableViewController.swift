@@ -15,12 +15,15 @@ class FavoritesTableViewController: UITableViewController
   
   var datasource: Results<PlaceItem>!
   
+  private var discoveries = [Discover(name: "Paris001", address: "Paris", comment: nil, photo: UIImage(named: "paris"), rating: 5, isFavorite: false),
+    Discover(name: "Rome001", address: "Rome", comment: nil, photo: UIImage(named: "rome"), rating: 4, isFavorite: false),
+    Discover(name: "London001", address: "London", comment: nil, photo: UIImage(named: "london"), rating: 3, isFavorite: false)
+  ]
+  
   // MARK: View Controller Lifecycle
 
   override func viewDidLoad() {
     super.viewDidLoad()
-  
-    // Load sample images??
     
     // Use the edit button item provided by the table view controller
     navigationItem.leftBarButtonItem = editButtonItem()
@@ -34,7 +37,7 @@ class FavoritesTableViewController: UITableViewController
     reloadTheTable()
   }
 
-  // MARK: - Table view data source
+  // MARK: - Table View Data source
 
   override func numberOfSectionsInTableView(tableView: UITableView) -> Int
   {
@@ -43,6 +46,7 @@ class FavoritesTableViewController: UITableViewController
 
   override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int
   {
+    // return discoveries.count
     return datasource.count
   }
   
@@ -53,10 +57,15 @@ class FavoritesTableViewController: UITableViewController
     let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! FavoritesTableViewCell
     
     // Fetches the appropriate place for the data source layout
+//    cell.nameLabel.text = discoveries[indexPath.row].name
+//    cell.addressLabel.text = discoveries[indexPath.row].address
+//    cell.photoImageView.image = discoveries[indexPath.row].photo
+//    cell.ratingControl.rating = discoveries[indexPath.row].rating
+    
     let place = datasource[indexPath.row]
     
     cell.nameLabel.text = place.name
-    cell.locationLabel.text = place.location
+    cell.addressLabel.text = place.address
     cell.photoImageView.image = UIImage(data: place.photo!)
     cell.ratingControl.rating = place.rating
  

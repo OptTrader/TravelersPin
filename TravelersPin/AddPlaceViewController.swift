@@ -8,17 +8,31 @@
 
 import UIKit
 import RealmSwift
+import CloudKit
+import MobileCoreServices
+import CoreLocation
 
 class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate
 {
-  // MARK: Properties
+  // MARK: Outlets
 
   @IBOutlet weak var photoImageView: UIImageView!
   @IBOutlet weak var nameTextField: UITextField!
-  @IBOutlet weak var locationTextField: UITextField!
+  @IBOutlet weak var addressTextField: UITextField!
   @IBOutlet weak var commentTextField: UITextField!
   @IBOutlet weak var ratingControl: RatingControl!
   @IBOutlet weak var saveButton: UIBarButtonItem!
+  
+  // MARK: Properties
+  
+  let container = CKContainer.defaultContainer()
+  var publicDatabase: CKDatabase?
+  // confirm?
+  var currentRecord: CKRecord?
+  var photoURL: NSURL?
+  
+  // location property
+  var currentLocation: CLLocation?
   
   // MARK: View Controller Lifecycle
   
@@ -27,11 +41,14 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
     
     // Handle the text field’s user input through delegate callbacks
     nameTextField.delegate = self
-    locationTextField.delegate = self
+    addressTextField.delegate = self
     commentTextField.delegate = self
     
     // Enable the Save button only if the text field has a valid Place name
     checkValidNameAndLocation()
+    
+    // CloudKit container
+    publicDatabase = container.publicCloudDatabase
   }
   
   // MARK: UITextFieldDelegate
@@ -61,8 +78,15 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   {
     // Disable the Save button if the text field is empty
     let nameText = nameTextField.text ?? ""
-    let locationText = locationTextField.text ?? ""
-    saveButton.enabled = !nameText.isEmpty && !locationText.isEmpty
+    let addressText = addressTextField.text ?? ""
+    saveButton.enabled = !nameText.isEmpty && !addressText.isEmpty
+  }
+  
+  override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?)
+  {
+    nameTextField.endEditing(true)
+    addressTextField.endEditing(true)
+    commentTextField.endEditing(true)
   }
   
   // MARK: UIImagePickerControllerDelegate
@@ -80,6 +104,9 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
 
     // Set photoImageView to display the selected image
     photoImageView.image = selectedImage
+    
+    // CloudKit Method
+    photoURL = saveImageToFile(selectedImage)
 
     // Dismiss the picker
     dismissViewControllerAnimated(true, completion: nil)
@@ -92,13 +119,20 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
     dismissViewControllerAnimated(true, completion: nil)
   }
   
-  // This method lets you configure a view controller before it's presented
-  
+//  @IBAction func saveAction(sender: UIBarButtonItem)
+//  {
+//    savePlace()
+//    saveRecordToCloud(self)
+//    self.navigationController?.popToRootViewControllerAnimated(true)
+//  }
+//  // This method lets you configure a view controller before it's presented
+//  
   override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
   {
     if saveButton === sender
     {
       savePlace()
+      saveRecordToCloud(self)
     }
   }
 
@@ -108,7 +142,7 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   {
     // Hide the keyboard
     nameTextField.resignFirstResponder()
-    locationTextField.resignFirstResponder()
+    addressTextField.resignFirstResponder()
     commentTextField.resignFirstResponder()
     
     // UIImagePickerController is a view controller that lets a user pick media from their photo library
@@ -127,7 +161,7 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   {
     let newPlace = PlaceItem()
     newPlace.name = nameTextField.text!
-    newPlace.location = locationTextField.text!
+    newPlace.address = addressTextField.text!
     newPlace.comment = commentTextField.text!
     newPlace.photo = UIImagePNGRepresentation(photoImageView.image!)
     newPlace.rating = ratingControl.rating
@@ -135,4 +169,159 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
     PlaceDataController.savePlace(newPlace)
   }
   
+  func saveImageToFile(image: UIImage) -> NSURL
+  {
+    let dirPaths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+    let docsDir: AnyObject = dirPaths[0]
+    let filePath = docsDir.stringByAppendingPathComponent("currentImage.png")
+    UIImageJPEGRepresentation(image, 0.5)?.writeToFile(filePath, atomically: true)
+    
+    return NSURL.fileURLWithPath(filePath)
+  }
+  
+  func saveRecordToCloud(sender: AnyObject)
+  {
+    if (photoURL == nil)
+    {
+      notifyUser("No Photo", message: "Use the Photo option to choose a photo")
+    }
+    
+    let asset = CKAsset(fileURL: photoURL!)
+    
+    let myRecord = CKRecord(recordType: "Places")
+    myRecord.setObject(nameTextField.text, forKey: "name")
+    myRecord.setObject(addressTextField.text, forKey: "address")
+    myRecord.setObject(commentTextField.text, forKey: "comment")
+    myRecord.setObject(asset, forKey: "photo")
+    myRecord.setObject(ratingControl.rating, forKey: "rating")
+    
+    // GeoCoder Method
+    
+    let geocoder = CLGeocoder()
+    geocoder.geocodeAddressString(addressTextField.text!, completionHandler:
+      {(placemarks, error) -> Void in
+        
+        if (error == nil)
+        {
+          if placemarks!.count > 0
+          {
+            let placemark: CLPlacemark = placemarks![0]
+            self.currentLocation = placemark.location
+          }
+        }
+        else {
+          print("Error, error")
+        }
+        
+        myRecord.setObject(self.currentLocation, forKey: "location")
+        
+        self.publicDatabase!.saveRecord(myRecord, completionHandler:
+          ({ returnRecord, error in
+            if let err = error
+            {
+              self.notifyUser("Save Error", message: err.localizedDescription)
+            }
+            else {
+              dispatch_async(dispatch_get_main_queue())
+              {
+                // self.notifyUser("Success", message: "Successfully saved")
+              }
+              // keep?
+              self.currentRecord = myRecord
+            }
+          }))
+        
+        
+      })
+    
+    // Original Save Method
+    
+//    publicDatabase!.saveRecord(myRecord, completionHandler:
+//      ({returnRecord, error in
+//        if let err = error
+//        {
+//          self.notifyUser("Save Error", message: err.localizedDescription)
+//        }
+//        else {
+//          dispatch_async(dispatch_get_main_queue())
+//          {
+//            self.notifyUser("Success", message: "Place saved successfully")
+//          }
+//          // confirm?
+//          self.currentRecord = myRecord
+//        }
+//      }))
+  }
+  
+  func notifyUser(title: String, message: String) -> Void
+  {
+    let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+    
+    let cancelAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
+    
+    alert.addAction(cancelAction)
+    self.presentViewController(alert, animated: true, completion: nil)
+  }
+  
+  
 }
+
+//CLLocationManagerDelegate
+//{
+//  @IBOutlet weak var imageView: UIImageView!
+//  @IBOutlet weak var nameTextField: UITextField!
+//  @IBOutlet weak var addressTextField: UITextField!
+
+
+
+//  @IBAction func saveAction(sender: UIBarButtonItem)
+//  {
+
+//
+//    let asset = CKAsset(fileURL: photoURL!)
+//    let myRecord = CKRecord(recordType: "Album")
+//    
+//    myRecord.setObject(nameTextField.text, forKey: "name")
+//    myRecord.setObject(addressTextField.text, forKey: "address")
+//    myRecord.setObject(asset, forKey: "photo")
+//    
+//    // The Other Method
+//    
+//    let geocoder = CLGeocoder()
+//    geocoder.geocodeAddressString(addressTextField.text!, completionHandler:
+//      {(placemarks, error) -> Void in
+//        if (error == nil)
+//        {
+//          if placemarks!.count > 0
+//          {
+//            let placemark: CLPlacemark = placemarks![0]
+//            self.currentLocation = placemark.location
+//          }
+//        }
+//        else {
+//          print("Error", error)
+//        }
+//        
+//        myRecord.setObject(self.currentLocation, forKey: "location")
+//        
+//        self.publicDatabase!.saveRecord(myRecord, completionHandler:
+//          ({ returnRecord, error in
+//            if let err = error
+//            {
+//              self.notifyUser("Save Error", message: err.localizedDescription)
+//            }
+//            else {
+//              dispatch_async(dispatch_get_main_queue())
+//                {
+//                  self.notifyUser("Success", message: "Successfully saved")
+//              }
+//              self.currentRecord = myRecord
+//            }
+//          }))
+//
+//    })
+//    
+
+//  }
+//  
+//}

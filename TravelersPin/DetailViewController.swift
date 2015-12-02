@@ -13,7 +13,7 @@ class DetailViewController: UIViewController
   // MARK: Properties
   
   @IBOutlet weak var nameLabel: UILabel!
-  @IBOutlet weak var locationLabel: UILabel!
+  @IBOutlet weak var addressLabel: UILabel!
   @IBOutlet weak var photoImageView: UIImageView!
   @IBOutlet weak var ratingControl: RatingControl!
   @IBOutlet weak var commentLabel: UILabel!
@@ -29,7 +29,7 @@ class DetailViewController: UIViewController
     {
       navigationItem.title = place.name
       nameLabel.text = place.name
-      locationLabel.text = place.location
+      addressLabel.text = place.address
       photoImageView.image = UIImage(data: place.photo!)
       ratingControl.rating = place.rating
       commentLabel.text = place.comment

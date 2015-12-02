@@ -14,7 +14,7 @@ class PlaceItem: Object
   // MARK: Properties
 
   dynamic var name: String = ""
-  dynamic var location: String = ""
+  dynamic var address: String = ""
   dynamic var comment: String? = nil
   dynamic var photo: NSData? = nil
   dynamic var rating: Int = 0
