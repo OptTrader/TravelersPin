@@ -8,9 +8,9 @@
 
 import UIKit
 
-protocol DiscoverCollectionViewCellDelegate {
-  func didFavoriteButtonPressed(cell: DiscoverCollectionViewCell)
-}
+//protocol DiscoverCollectionViewCellDelegate {
+//  func didFavoriteButtonPressed(cell: DiscoverCollectionViewCell)
+//}
 
 class DiscoverCollectionViewCell: UICollectionViewCell
 {
@@ -20,25 +20,26 @@ class DiscoverCollectionViewCell: UICollectionViewCell
   @IBOutlet weak var nameLabel: UILabel!
   @IBOutlet weak var addressLabel: UILabel!
   @IBOutlet weak var ratingControl: RatingControl!
-  @IBOutlet weak var favoriteButton: UIButton!
   
-  var delegate: DiscoverCollectionViewCellDelegate?
+  // @IBOutlet weak var favoriteButton: UIButton!
   
-  var isFavorite: Bool = false {
-    didSet {
-      if isFavorite
-      {
-        favoriteButton.setImage(UIImage(named: "heartfull"), forState: .Normal)
-      }
-      else {
-        favoriteButton.setImage(UIImage(named: "heart"), forState: .Normal)
-      }
-    }
-  }
-  
-  @IBAction func favoriteButtonTapped(sender: AnyObject)
-  {
-    delegate?.didFavoriteButtonPressed(self)
-  }
+//  var delegate: DiscoverCollectionViewCellDelegate?
+//  
+//  var isFavorite: Bool = false {
+//    didSet {
+//      if isFavorite
+//      {
+//        favoriteButton.setImage(UIImage(named: "heartfull"), forState: .Normal)
+//      }
+//      else {
+//        favoriteButton.setImage(UIImage(named: "heart"), forState: .Normal)
+//      }
+//    }
+//  }
+//  
+//  @IBAction func favoriteButtonTapped(sender: AnyObject)
+//  {
+//    delegate?.didFavoriteButtonPressed(self)
+//  }
   
 }

@@ -230,8 +230,6 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
               self.currentRecord = myRecord
             }
           }))
-        
-        
       })
     
     // Original Save Method
@@ -265,63 +263,3 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   
   
 }
-
-//CLLocationManagerDelegate
-//{
-//  @IBOutlet weak var imageView: UIImageView!
-//  @IBOutlet weak var nameTextField: UITextField!
-//  @IBOutlet weak var addressTextField: UITextField!
-
-
-
-//  @IBAction func saveAction(sender: UIBarButtonItem)
-//  {
-
-//
-//    let asset = CKAsset(fileURL: photoURL!)
-//    let myRecord = CKRecord(recordType: "Album")
-//    
-//    myRecord.setObject(nameTextField.text, forKey: "name")
-//    myRecord.setObject(addressTextField.text, forKey: "address")
-//    myRecord.setObject(asset, forKey: "photo")
-//    
-//    // The Other Method
-//    
-//    let geocoder = CLGeocoder()
-//    geocoder.geocodeAddressString(addressTextField.text!, completionHandler:
-//      {(placemarks, error) -> Void in
-//        if (error == nil)
-//        {
-//          if placemarks!.count > 0
-//          {
-//            let placemark: CLPlacemark = placemarks![0]
-//            self.currentLocation = placemark.location
-//          }
-//        }
-//        else {
-//          print("Error", error)
-//        }
-//        
-//        myRecord.setObject(self.currentLocation, forKey: "location")
-//        
-//        self.publicDatabase!.saveRecord(myRecord, completionHandler:
-//          ({ returnRecord, error in
-//            if let err = error
-//            {
-//              self.notifyUser("Save Error", message: err.localizedDescription)
-//            }
-//            else {
-//              dispatch_async(dispatch_get_main_queue())
-//                {
-//                  self.notifyUser("Success", message: "Successfully saved")
-//              }
-//              self.currentRecord = myRecord
-//            }
-//          }))
-//
-//    })
-//    
-
-//  }
-//  
-//}
