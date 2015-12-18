@@ -15,10 +15,10 @@ class FavoritesTableViewController: UITableViewController
   
   var datasource: Results<PlaceItem>!
   
-  private var discoveries = [Discover(name: "Paris001", address: "Paris", comment: nil, photo: UIImage(named: "paris"), rating: 5, isFavorite: false),
-    Discover(name: "Rome001", address: "Rome", comment: nil, photo: UIImage(named: "rome"), rating: 4, isFavorite: false),
-    Discover(name: "London001", address: "London", comment: nil, photo: UIImage(named: "london"), rating: 3, isFavorite: false)
-  ]
+//  private var discoveries = [Discover(name: "Paris001", address: "Paris", comment: nil, photo: UIImage(named: "paris"), rating: 5, isFavorite: false),
+//    Discover(name: "Rome001", address: "Rome", comment: nil, photo: UIImage(named: "rome"), rating: 4, isFavorite: false),
+//    Discover(name: "London001", address: "London", comment: nil, photo: UIImage(named: "london"), rating: 3, isFavorite: false)
+//  ]
   
   // MARK: View Controller Lifecycle
 
@@ -46,7 +46,6 @@ class FavoritesTableViewController: UITableViewController
 
   override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int
   {
-    // return discoveries.count
     return datasource.count
   }
   
@@ -57,11 +56,6 @@ class FavoritesTableViewController: UITableViewController
     let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! FavoritesTableViewCell
     
     // Fetches the appropriate place for the data source layout
-//    cell.nameLabel.text = discoveries[indexPath.row].name
-//    cell.addressLabel.text = discoveries[indexPath.row].address
-//    cell.photoImageView.image = discoveries[indexPath.row].photo
-//    cell.ratingControl.rating = discoveries[indexPath.row].rating
-    
     let place = datasource[indexPath.row]
     
     cell.nameLabel.text = place.name

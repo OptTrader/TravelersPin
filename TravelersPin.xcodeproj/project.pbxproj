@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A08CE291C18874300AD8B28 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A08CE281C18874300AD8B28 /* Model.swift */; };
-		7A08CE2B1C18919F00AD8B28 /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A08CE2A1C18919F00AD8B28 /* Place.swift */; };
+		7A08CE2E1C1B247400AD8B28 /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A08CE2D1C1B247400AD8B28 /* Place.swift */; };
+		7A08CE301C1EA3B800AD8B28 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A08CE2F1C1EA3B800AD8B28 /* BaseViewController.swift */; };
 		7A58625F1C075CC9008274D5 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A58625E1C075CC9008274D5 /* CloudKit.framework */; };
 		7A5862651C0A03C3008274D5 /* DiscoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5862641C0A03C3008274D5 /* DiscoverViewController.swift */; };
 		7A5862671C0B4A06008274D5 /* DiscoverCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5862661C0B4A06008274D5 /* DiscoverCollectionViewCell.swift */; };
-		7A5862691C0B4B88008274D5 /* Discover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5862681C0B4B88008274D5 /* Discover.swift */; };
 		7A67F6941BFF70EE002DCD54 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A67F6931BFF70EE002DCD54 /* AppDelegate.swift */; };
 		7A67F6991BFF70EE002DCD54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A67F6971BFF70EE002DCD54 /* Main.storyboard */; };
 		7A67F69B1BFF70EE002DCD54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A67F69A1BFF70EE002DCD54 /* Assets.xcassets */; };
@@ -27,7 +26,7 @@
 		7A67F6CF1BFFF2A0002DCD54 /* FavoritesTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A67F6CE1BFFF2A0002DCD54 /* FavoritesTableViewController.swift */; };
 		7A67F6D11BFFF2B7002DCD54 /* FavoritesTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A67F6D01BFFF2B7002DCD54 /* FavoritesTableViewCell.swift */; };
 		7A9C72FF1C0FFFC50053CD3B /* CloudKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9C72FE1C0FFFC50053CD3B /* CloudKitManager.swift */; };
-		7A9C73011C1000500053CD3B /* CloudKitFetchedResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9C73001C1000500053CD3B /* CloudKitFetchedResultController.swift */; };
+		7AC4625C1C2142B9000BCC1F /* DetailedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC4625B1C2142B9000BCC1F /* DetailedViewController.swift */; };
 		A1839C5A3423634A45836CB2 /* Pods_TravelersPin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B8F01FA3AF57A36AA385F79 /* Pods_TravelersPin.framework */; };
 		D63C9A93114AE94FB0B88DFA /* Pods_TravelersPinTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC00DBCBA804C2B86660A1FD /* Pods_TravelersPinTests.framework */; };
 		DEA0573F74037B8BF2C6025E /* Pods_TravelersPinUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D186F23A972AF7A96F35E1D /* Pods_TravelersPinUITests.framework */; };
@@ -56,13 +55,12 @@
 		495B5FE7701113BE189EF5C6 /* Pods-TravelersPinUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TravelersPinUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TravelersPinUITests/Pods-TravelersPinUITests.release.xcconfig"; sourceTree = "<group>"; };
 		4B8F01FA3AF57A36AA385F79 /* Pods_TravelersPin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TravelersPin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		577BC5B1CDAC92D6E3385533 /* Pods-TravelersPin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TravelersPin.release.xcconfig"; path = "Pods/Target Support Files/Pods-TravelersPin/Pods-TravelersPin.release.xcconfig"; sourceTree = "<group>"; };
-		7A08CE281C18874300AD8B28 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
-		7A08CE2A1C18919F00AD8B28 /* Place.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
+		7A08CE2D1C1B247400AD8B28 /* Place.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
+		7A08CE2F1C1EA3B800AD8B28 /* BaseViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		7A58625D1C075CA8008274D5 /* TravelersPin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = TravelersPin.entitlements; sourceTree = "<group>"; };
 		7A58625E1C075CC9008274D5 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		7A5862641C0A03C3008274D5 /* DiscoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DiscoverViewController.swift; sourceTree = "<group>"; };
 		7A5862661C0B4A06008274D5 /* DiscoverCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DiscoverCollectionViewCell.swift; sourceTree = "<group>"; };
-		7A5862681C0B4B88008274D5 /* Discover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Discover.swift; sourceTree = "<group>"; };
 		7A67F6901BFF70EE002DCD54 /* TravelersPin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TravelersPin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A67F6931BFF70EE002DCD54 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7A67F6981BFF70EE002DCD54 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -83,7 +81,7 @@
 		7A67F6CE1BFFF2A0002DCD54 /* FavoritesTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoritesTableViewController.swift; sourceTree = "<group>"; };
 		7A67F6D01BFFF2B7002DCD54 /* FavoritesTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoritesTableViewCell.swift; sourceTree = "<group>"; };
 		7A9C72FE1C0FFFC50053CD3B /* CloudKitManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudKitManager.swift; sourceTree = "<group>"; };
-		7A9C73001C1000500053CD3B /* CloudKitFetchedResultController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudKitFetchedResultController.swift; sourceTree = "<group>"; };
+		7AC4625B1C2142B9000BCC1F /* DetailedViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailedViewController.swift; sourceTree = "<group>"; };
 		8A6B4C3226C773E72205DB64 /* Pods-TravelersPin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TravelersPin.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TravelersPin/Pods-TravelersPin.debug.xcconfig"; sourceTree = "<group>"; };
 		BE3400CAB51C35C1D12EF0A9 /* Pods-TravelersPinTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TravelersPinTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TravelersPinTests/Pods-TravelersPinTests.debug.xcconfig"; sourceTree = "<group>"; };
 		DC00DBCBA804C2B86660A1FD /* Pods_TravelersPinTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TravelersPinTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -122,10 +120,12 @@
 		7A30F3C61C0458E6008780AB /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				7A08CE2F1C1EA3B800AD8B28 /* BaseViewController.swift */,
 				7A67F6CA1BFFF26D002DCD54 /* AddPlaceViewController.swift */,
 				7A67F6CE1BFFF2A0002DCD54 /* FavoritesTableViewController.swift */,
 				7A67F6CC1BFFF27D002DCD54 /* DetailViewController.swift */,
 				7A5862641C0A03C3008274D5 /* DiscoverViewController.swift */,
+				7AC4625B1C2142B9000BCC1F /* DetailedViewController.swift */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -186,8 +186,6 @@
 		7A67F6C11BFF738E002DCD54 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				7A5862681C0B4B88008274D5 /* Discover.swift */,
-				7A9C72FE1C0FFFC50053CD3B /* CloudKitManager.swift */,
 				7A67F6931BFF70EE002DCD54 /* AppDelegate.swift */,
 				7A67F69A1BFF70EE002DCD54 /* Assets.xcassets */,
 				7A67F69F1BFF70EE002DCD54 /* Info.plist */,
@@ -201,9 +199,8 @@
 				7A67F6C21BFF7478002DCD54 /* RatingControl.swift */,
 				7A67F6C51BFF7AE5002DCD54 /* PlaceItem.swift */,
 				7A67F6C71BFF7B3B002DCD54 /* PlaceDataController.swift */,
-				7A9C73001C1000500053CD3B /* CloudKitFetchedResultController.swift */,
-				7A08CE281C18874300AD8B28 /* Model.swift */,
-				7A08CE2A1C18919F00AD8B28 /* Place.swift */,
+				7A08CE2D1C1B247400AD8B28 /* Place.swift */,
+				7A9C72FE1C0FFFC50053CD3B /* CloudKitManager.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -518,17 +515,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AC4625C1C2142B9000BCC1F /* DetailedViewController.swift in Sources */,
 				7A5862651C0A03C3008274D5 /* DiscoverViewController.swift in Sources */,
 				7A67F6CB1BFFF26D002DCD54 /* AddPlaceViewController.swift in Sources */,
 				7A9C72FF1C0FFFC50053CD3B /* CloudKitManager.swift in Sources */,
 				7A67F6D11BFFF2B7002DCD54 /* FavoritesTableViewCell.swift in Sources */,
-				7A9C73011C1000500053CD3B /* CloudKitFetchedResultController.swift in Sources */,
 				7A67F6C81BFF7B3B002DCD54 /* PlaceDataController.swift in Sources */,
+				7A08CE301C1EA3B800AD8B28 /* BaseViewController.swift in Sources */,
 				7A5862671C0B4A06008274D5 /* DiscoverCollectionViewCell.swift in Sources */,
-				7A08CE291C18874300AD8B28 /* Model.swift in Sources */,
 				7A67F6CF1BFFF2A0002DCD54 /* FavoritesTableViewController.swift in Sources */,
-				7A08CE2B1C18919F00AD8B28 /* Place.swift in Sources */,
-				7A5862691C0B4B88008274D5 /* Discover.swift in Sources */,
+				7A08CE2E1C1B247400AD8B28 /* Place.swift in Sources */,
 				7A67F6C31BFF7478002DCD54 /* RatingControl.swift in Sources */,
 				7A67F6C61BFF7AE5002DCD54 /* PlaceItem.swift in Sources */,
 				7A67F6941BFF70EE002DCD54 /* AppDelegate.swift in Sources */,
@@ -683,6 +679,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.chrisjkong.TravelersPin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -699,6 +696,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.chrisjkong.TravelersPin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

@@ -8,10 +8,6 @@
 
 import UIKit
 
-//protocol DiscoverCollectionViewCellDelegate {
-//  func didFavoriteButtonPressed(cell: DiscoverCollectionViewCell)
-//}
-
 class DiscoverCollectionViewCell: UICollectionViewCell
 {
   // MARK: Properties
@@ -21,25 +17,47 @@ class DiscoverCollectionViewCell: UICollectionViewCell
   @IBOutlet weak var addressLabel: UILabel!
   @IBOutlet weak var ratingControl: RatingControl!
   
-  // @IBOutlet weak var favoriteButton: UIButton!
-  
-//  var delegate: DiscoverCollectionViewCellDelegate?
-//  
-//  var isFavorite: Bool = false {
-//    didSet {
-//      if isFavorite
-//      {
-//        favoriteButton.setImage(UIImage(named: "heartfull"), forState: .Normal)
-//      }
-//      else {
-//        favoriteButton.setImage(UIImage(named: "heart"), forState: .Normal)
-//      }
-//    }
-//  }
-//  
-//  @IBAction func favoriteButtonTapped(sender: AnyObject)
-//  {
-//    delegate?.didFavoriteButtonPressed(self)
-//  }
-  
+  func setPlace(place: Place)
+  {
+    nameLabel.text = place.name
+    addressLabel.text = place.address
+    ratingControl.rating = place.rating
+//    imageView.alpha = 0.0
+    imageView.image = place.photo
+    
+//    UIView.animateWithDuration(0.3, animations: {
+//      self.imageView.alpha = 1.0
+//    })
+  }
+
 }
+
+//
+//import UIKit
+//
+//private let kCellReuseId = "cityTableViewCellReuseId"
+//private let kCityTableViewCell = "CityTableViewCell"
+//
+//class CityTableViewCell: UITableViewCell {
+//  
+//  @IBOutlet var pictureImageView: UIImageView!
+//  @IBOutlet var nameLable: UILabel!
+//  
+//  class func reuseIdentifier() -> String {
+//    return kCellReuseId
+//  }
+//  
+//  class func nibName() -> String {
+//    return kCityTableViewCell
+//  }
+//  
+//  func setCity(city: City) {
+//    nameLable.text = city.name
+//    pictureImageView.alpha = 0.0
+//    pictureImageView.image = city.image
+//    
+//    UIView.animateWithDuration(0.3, animations: {
+//      self.pictureImageView.alpha = 1.0
+//    })
+//  }
+//}

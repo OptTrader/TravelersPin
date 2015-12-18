@@ -7,251 +7,241 @@
 //
 
 import UIKit
+import CloudKit
 
-class CloudKitManager: NSObject
+private let recordType = "Places"
+
+final class CloudKitManager
 {
-//  import UIKit
-//  import CloudKit
-//  
-//  class DiscoverTableViewController: UITableViewController {
-//    
-//    @IBOutlet var spinner:UIActivityIndicatorView!
-//    
-//    var restaurants:[CKRecord] = []
-//    
-//    var imageCache:NSCache = NSCache()
-//    
-//    override func viewDidLoad() {
-//      super.viewDidLoad()
-//      
-//      spinner.hidesWhenStopped = true
-//      spinner.center = view.center
-//      view.addSubview(spinner)
-//      spinner.startAnimating()
-//      
-//      getRecordsFromCloud()
-//      
-//      // Pull To Refresh Control
-//      refreshControl = UIRefreshControl()
-//      refreshControl?.backgroundColor = UIColor.whiteColor()
-//      refreshControl?.tintColor = UIColor.grayColor()
-//      refreshControl?.addTarget(self, action: "getRecordsFromCloud", forControlEvents: UIControlEvents.ValueChanged)
-//    }
+  private init()
+  {
+    //forbide to create instance of helper class
+  }
+  
+  static func publicCloudDatabase() -> CKDatabase
+  {
+    return CKContainer.defaultContainer().publicCloudDatabase
+  }
+  
+  // MARK: Retrieve existing records
+  
+  static func fetchAllRecords(completion: (records: [Place]?, error: NSError!) -> Void)
+  {
+    let predicate = NSPredicate(value: true)
+    
+    let query = CKQuery(recordType: recordType, predicate: predicate)
+    
+    publicCloudDatabase().performQuery(query, inZoneWithID: nil) { (records, error) in
+      let places = records?.map { Place(record: $0) }
+      
+      dispatch_async(dispatch_get_main_queue())
+      {
+        completion(records: places, error: error)
+      }
+    }
+  }
 
-//    
-//    func getRecordsFromCloud() {
-//      // Fetch data using Convenience API
-//      let cloudContainer = CKContainer.defaultContainer()
-//      let publicDatabase = cloudContainer.publicCloudDatabase
-//      let predicate = NSPredicate(value: true)
-//      let query = CKQuery(recordType: "Restaurant", predicate: predicate)
-//      query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-//      
-//      // Create the query operation with the query
-//      let queryOperation = CKQueryOperation(query: query)
-//      queryOperation.desiredKeys = ["name", "type", "location"]
-//      queryOperation.queuePriority = .VeryHigh
-//      queryOperation.resultsLimit = 50
-//      queryOperation.recordFetchedBlock = { (record:CKRecord!) -> Void in
-//        if let restaurantRecord = record {
-//          self.restaurants.append(restaurantRecord)
-//        }
-//      }
-//      
-//      queryOperation.queryCompletionBlock = { (cursor:CKQueryCursor?, error:NSError?) -> Void in
-//        if (error != nil) {
-//          print("Failed to get data from iCloud - \(error!.localizedDescription)")
-//          return
-//        }
-//        
-//        print("Successfully retrieve the data from iCloud")
-//        self.refreshControl?.endRefreshing()
-//        NSOperationQueue.mainQueue().addOperationWithBlock() {
-//          self.spinner.stopAnimating()
-//          self.tableView.reloadData()
-//        }
-//        
-//      }
-//      
-//      // Execute the query
-//      publicDatabase.addOperation(queryOperation)
-//      
-//    }
-//    
-//    
-//    // MARK: - Table view data source
-//    
-//    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-//      return 1
-//    }
-//    
-//    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//      return restaurants.count
-//    }
-//    
-//    
-//    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-//      let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as! DiscoverTableViewCell
-//      
-//      // Configure the cell...
-//      let restaurant = restaurants[indexPath.row]
-//      cell.nameLabel.text = restaurant.objectForKey("name") as? String
-//      cell.typeLabel.text = restaurant.objectForKey("type") as? String
-//      cell.locationLabel.text = restaurant.objectForKey("location") as? String
-//      
-//      // Set default image
-//      cell.bgImageView.image = nil
-//      
-//      // Check if the image is stored in cache
-//      if let imageFileURL = imageCache.objectForKey(restaurant.recordID) as? NSURL {
-//        // Fetch image from cache
-//        print("Get image from cache")
-//        cell.bgImageView.image = UIImage(data: NSData(contentsOfURL: imageFileURL)!)
-//        
-//      } else {
-//        
-//        // Fetch Image from Cloud in background
-//        let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
-//        let fetchRecordsImageOperation = CKFetchRecordsOperation(recordIDs: [restaurant.recordID])
-//        fetchRecordsImageOperation.desiredKeys = ["image"]
-//        fetchRecordsImageOperation.queuePriority = .VeryHigh
-//        
-//        fetchRecordsImageOperation.perRecordCompletionBlock = {(record:CKRecord?, recordID:CKRecordID?, error:NSError?) -> Void in
-//          if (error != nil) {
-//            print("Failed to get restaurant image: \(error!.localizedDescription)")
-//            return
-//          }
-//          
-//          if let restaurantRecord = record {
-//            NSOperationQueue.mainQueue().addOperationWithBlock() {
-//              if let imageAsset = restaurantRecord.objectForKey("image") as? CKAsset {
-//                cell.bgImageView.image = UIImage(data: NSData(contentsOfURL: imageAsset.fileURL)!)
-//                
-//                // Add the image URL to cache
-//                self.imageCache.setObject(imageAsset.fileURL, forKey: restaurant.recordID)
-//              }
-//            }
-//          }
-//        }
-//        
-//        publicDatabase.addOperation(fetchRecordsImageOperation)
-//      }
-//      
-//      return cell
-//    }
-//    
-//  }
-
+  
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //
-//dynamic var name: String = ""
-//dynamic var address: String = ""
-//dynamic var comment: String? = nil
-//dynamic var photo: NSData? = nil
-//dynamic var rating: Int = 0
-
-
 //import UIKit
 //import CloudKit
-//import CoreLocation
 //
-//struct WifiObject {
-//  var recordID : CKRecordID
-//  var record : CKRecord
-//  var password : String
-//  var SSID : String
-//  var database : CKDatabase
+//private let recordType = "Cities"
+//
+//final class CloudKitManager {
 //  
-//  init(record : CKRecord, database : CKDatabase) {
-//    self.database = database
-//    self.record = record
-//    self.recordID = record.recordID
-//    self.password = record.objectForKey("Password") as! String
-//    self.SSID = record.objectForKey("SSID") as! String
+//  private init() {
+//    ///forbide to create instance of helper class
 //  }
 //  
-//}
-//
-//protocol CloudKitFetchedResultControllerDelegate {
-//  
-//  func cloudKitFetchedResultControllerErrorFetchingResult(error : NSError)
-//  func cloudKitFetchedResultControllerWifiObjectDidFetchingResultSuccess()
-//  func cloudKitFetchedResultControllerWifiObjectDidFetchingResultSuccessButHaveNoResult()
-//}
-//
-//class CloudKitFetchedResultController: NSObject {
-//  
-//  var publicDB : CKDatabase?
-//  var privateDB : CKDatabase?
-//  var predicate: NSPredicate! //2
-//  var delegate: CloudKitFetchedResultControllerDelegate? //3
-//  var results = [WifiObject]() //4
-//  
-//  var resultLimit = 30
-//  var cursor: CKQueryCursor!
-//  var startedGettingResults = false
-//  let RecordType = "WifiPassword"
-//  var inProgress = false
-//  
-//  
-//  init(delegate : CloudKitFetchedResultControllerDelegate) {
-//    self.delegate = delegate
-//    let container : CKContainer = CKContainer.defaultContainer()
-//    publicDB = container.publicCloudDatabase // Public Data
-//    privateDB = container.privateCloudDatabase // Private Data
+//  static func publicCloudDatabase() -> CKDatabase {
+//    return CKContainer.defaultContainer().publicCloudDatabase
 //  }
-//  //MARK:
-//  //MARK:  Fetch result
 //  
-//  func fetchFromCloud(publicDatabase yesOrNo : Bool) {
-//    var database : CKDatabase!
-//    if yesOrNo == true {
-//      database = publicDB!
-//    } else {
-//      database = privateDB!
-//    }
-//    let query : CKQuery = CKQuery(recordType: RecordType, predicate: predicate)
-//    database.performQuery(query, inZoneWithID: nil) { (results : [CKRecord]?, error : NSError?) -> Void in
-//      if error != nil {
-//        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-//          print("Error = \(error?.description)")
-//          self.delegate?.cloudKitFetchedResultControllerErrorFetchingResult(error!)
-//        })
-//        
-//      } else {
-//        if results == nil || results?.count == 0 {
-//          self.results.removeAll()
-//          dispatch_async(dispatch_get_main_queue(), { () -> Void in
-//            self.delegate?.cloudKitFetchedResultControllerWifiObjectDidFetchingResultSuccessButHaveNoResult()
-//          })
-//          
-//        } else {
-//          self.results.removeAll()
-//          for item : CKRecord in results! {
-//            let wifiObject : WifiObject = WifiObject(record: item, database: database)
-//            self.results.append(wifiObject)
-//          }
-//          dispatch_async(dispatch_get_main_queue(), { () -> Void in
-//            self.delegate?.cloudKitFetchedResultControllerWifiObjectDidFetchingResultSuccess()
-//          })
-//          
-//        }
+//  //MARK: Retrieve existing records
+//  static func fetchAllCities(completion: (records: [City]?, error: NSError!) -> Void) {
+//    let predicate = NSPredicate(value: true)
+//    
+//    let query = CKQuery(recordType: recordType, predicate: predicate)
+//    
+//    publicCloudDatabase().performQuery(query, inZoneWithID: nil) { (records, error) in
+//      let cities = records?.map { City(record: $0) }
+//      
+//      dispatch_async(dispatch_get_main_queue()) {
+//        completion(records: cities, error: error)
 //      }
 //    }
 //  }
+//  
+//  //MARK: add a new record
+//  static func createRecord(recordData: [String: String], completion: (record: CKRecord?, error: NSError!) -> Void) {
+//    let record = CKRecord(recordType: recordType)
+//    
+//    for (key, value) in recordData {
+//      if key == cityPicture {
+//        if let path = NSBundle.mainBundle().pathForResource(value, ofType: "jpg") {
+//          do {
+//            let data = try NSData(contentsOfURL: NSURL(fileURLWithPath: path), options: .DataReadingMappedIfSafe)
+//            record.setValue(data, forKey: key)
+//          } catch let error {
+//            print(error)
+//          }
+//        }
+//      } else {
+//        record.setValue(value, forKey: key)
+//      }
+//    }
+//    
+//    publicCloudDatabase().saveRecord(record, completionHandler: { (savedRecord, error) in
+//      dispatch_async(dispatch_get_main_queue()) {
+//        completion(record: record, error: error)
+//      }
+//    })
+//  }
+//  
+//  //MARK: updating the record by recordId
+//  static func updateRecord(recordId: String, text: String, completion: (CKRecord!, NSError?) -> Void) {
+//    let recordId = CKRecordID(recordName: recordId)
+//    publicCloudDatabase().fetchRecordWithID(recordId, completionHandler: { (updatedRecord, error) in
+//      
+//      guard let record = updatedRecord else  {
+//        dispatch_async(dispatch_get_main_queue()) {
+//          completion(nil, error)
+//        }
+//        return
+//      }
+//      
+//      record.setValue(text, forKey: cityText)
+//      self.publicCloudDatabase().saveRecord(record, completionHandler: { (savedRecord, error) in
+//        dispatch_async(dispatch_get_main_queue()) {
+//          completion(savedRecord, error)
+//        }
+//      })
+//      
+//    })
+//  }
+//  
+//  //MARK: remove the record
+//  static func removeRecord(recordId: String, completion: (String!, NSError?) -> Void) {
+//    let recordId = CKRecordID(recordName: recordId)
+//    publicCloudDatabase().deleteRecordWithID(recordId, completionHandler: { (deletedRecordId, error) in
+//      dispatch_async(dispatch_get_main_queue()) {
+//        completion (deletedRecordId?.recordName, error)
+//      }
+//    })
+//  }
+//  
+//  //MARK: check that user is logged
+//  static func checkLoginStatus(handler: (islogged: Bool) -> Void) {
+//    CKContainer.defaultContainer().accountStatusWithCompletionHandler{ (accountStatus, error) in
+//      if let error = error {
+//        print(error.localizedDescription)
+//      }
+//      switch accountStatus{
+//      case .Available:
+//        handler(islogged: true)
+//      default:
+//        handler(islogged: false)
+//      }
+//    }
+//  }
+//  
+//}
+
+
+
+
+
+
+//
+//import Foundation
+//import CloudKit
+//
+//protocol CloudKitDelegate {
+//  //    func errorUpdating(error: NSError)
+//  func diaryUpdated()
+//}
+//
+//class CloudKitHelper {
+//  var container : CKContainer
+//  var publicDB : CKDatabase
+//  let privateDB : CKDatabase
+//  var delegate : CloudKitDelegate?
+//
+//  var diary = [DiaryEntry]()
+//
+//  init() {
+//    container = CKContainer.defaultContainer()
+//    publicDB = container.publicCloudDatabase
+//    privateDB = container.privateCloudDatabase
+//  }
+//  
+//  func saveRecord(entry : DiaryEntry) {
+//    let entryRecord = CKRecord(recordType: "DiaryEntry")
+//    entryRecord.setValue(entry.blurb!, forKey: "Blurb")
+//    entryRecord.setValue(entry.mood, forKey: "Mood")
+//    entryRecord.setObject(entry.entryDate, forKey: "Date")
+//    if entry.location != nil {
+//      entryRecord.setValue(entry.location!, forKey: "Location")
+//    }
+//    if entry.temperature != nil {
+//      entryRecord.setValue(entry.temperature!, forKey: "Temp")
+//    }
+//    if entry.weather != nil {
+//      entryRecord.setValue(entry.weather!, forKey: "Weather")
+//    }
+//    if entry.weatherIcon != nil {
+//      entryRecord.setValue(entry.weatherIcon!, forKey: "WeatherIcon")
+//    }
+//    if entry.coordinates != nil {
+//      entryRecord.setObject(entry.coordinates!, forKey: "Coordinates")
+//    }
+//    if entry.photoURL != nil {
+//      let asset = CKAsset(fileURL: entry.photoURL!)
+//      entryRecord.setObject(asset, forKey: "photo")
+//    }
+//    
+//    privateDB.saveRecord(entryRecord, completionHandler: { (record, error) -> Void in
+//      if ( error != nil )
+//      {
+//        print("Error saving to cloud kit \(error!.description)", terminator: "\n")
+//      }
+//      else
+//      {
+//        print("Saved to cloud kit", terminator: "\n")
+//      }
+//    })
+//  }
+//  
+//  func getDiary() {
+//    print("get diary", terminator: "\n")
+//    let predicate = NSPredicate(value: true)
+//    let sort = NSSortDescriptor(key: "Date", ascending: true)
+//    
+//    let query = CKQuery(recordType: "DiaryEntry",
+//      predicate:  predicate)
+//    query.sortDescriptors = [sort]
+//    
+//    privateDB.performQuery(query, inZoneWithID: nil) {
+//      results, error in
+//      if error != nil {
+//        print("error getting entries from iCloud", terminator: "\n")
+//        return
+//      } else {
+//        print("results : \(results!.count)", terminator: "\n")
+//        //                var counter = 0
+//        for record in results! {
+//          let entry = DiaryEntry(record: record)
+//          self.diary.append(entry)
+//          //                    print("added entry \(counter++)")
+//        }
+//        dispatch_async(dispatch_get_main_queue()) {
+//          self.delegate!.diaryUpdated()
+//        }
+//      }
+//      print("done with getDiary")
+//    }
+//  }
+//  
 //}

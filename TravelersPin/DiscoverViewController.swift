@@ -7,45 +7,34 @@
 //
 
 import UIKit
-import CloudKit
-import MobileCoreServices
 
-class DiscoverViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate //, ModelDelegate
+private let kShowDetailSegueId = "showDetailSegueId"
+
+class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UICollectionViewDelegate
 {
   // MARK: Properties
 
   @IBOutlet weak var backgroundImageView: UIImageView!
   @IBOutlet weak var collectionView: UICollectionView!
   @IBOutlet var spinner: UIActivityIndicatorView!
+  
+  private var places = [Place]()
 
-  var places: [CKRecord] = []
-  var imageCache: NSCache = NSCache()
-  //let refreshControl = UIRefreshControl()
-  
-  // let model: Model = Model.sharedInstance()
-  
-  // MARK: View Controller Lifecycle
+  // MARK: View Controller's Lifecycle
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    // UI Appearance
-    updateUI()
+    // View Appearance
+    setupView()
 
-    // CloudKit
-    getRecordsFromCloud()
-    
-//    model.delegate = self
-//    model.fetchFromCloud()
-    
-    // Pull To Refresh Control
-//    self.refreshControl.backgroundColor = UIColor.whiteColor()
-//    self.refreshControl.tintColor = UIColor.orangeColor()
-//    self.refreshControl.addTarget(self, action: "getRecordsFromCloud", forControlEvents: .ValueChanged)
-//    collectionView?.addSubview(refreshControl)
+    // Reload data
+    updateData()
   }
   
-  func updateUI()
+  // MARK: Private
+  
+  private func setupView()
   {
     // Apply blurring effect
     backgroundImageView.image = UIImage(named: "backgroundImage")
@@ -69,14 +58,51 @@ class DiscoverViewController: UIViewController, UICollectionViewDataSource, UICo
     spinner.center = view.center
     spinner.color = UIColor.whiteColor()
     view.addSubview(spinner)
-    spinner.startAnimating()
+    
+    // Refresh
+    self.navigationItem.setLeftBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "refreshAction"), animated: true)
   }
   
   //  override func preferredStatusBarStyle() -> UIStatusBarStyle {
   //    return UIStatusBarStyle.LightContent
   //  }
+
+  func refreshAction()
+  {
+    self.places.removeAll()
+    self.collectionView.reloadData()
+    self.updateData()
+  }
+
+  func updateData()
+  {
+    shouldAnimatedIndicator(true)
+    
+    CloudKitManager.fetchAllRecords { (records, error) in
+      self.shouldAnimatedIndicator(false)
+      
+      guard let places = records else
+      {
+        self.presentMessage("Error", message: error.localizedDescription)
+        return
+      }
+      
+      self.places = places
+      self.collectionView.reloadData()
+    }
+  }
   
-  // MARK: - Collection View Data Source
+  private func shouldAnimatedIndicator(animate: Bool)
+  {
+    if animate
+    {
+      self.spinner.startAnimating()
+    } else {
+      self.spinner.stopAnimating()
+    }
+  }
+  
+  // MARK: Collection View Data Source
   
   func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int
   {
@@ -86,248 +112,180 @@ class DiscoverViewController: UIViewController, UICollectionViewDataSource, UICo
   func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
   {
     return places.count
-    
-//    if resultController == nil
-//    {
-//      return 0
-//    }
-//    return Model.sharedInstance().places.count
   }
   
   func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
   {
     let cell = collectionView.dequeueReusableCellWithReuseIdentifier("DiscoverCollectionViewCell", forIndexPath: indexPath) as! DiscoverCollectionViewCell
     
-    // Configure the cell
-    let place = places[indexPath.row]
-    cell.nameLabel?.text = place.objectForKey("name") as? String
-    cell.addressLabel?.text = place.objectForKey("address") as? String
-    cell.ratingControl?.rating = (place.objectForKey("rating") as? Int)!
-    cell.imageView?.image = nil
+    let place = self.places[indexPath.row]
+    cell.setPlace(place)
     
-    // Check if the image is stored in cache
-    if let imageFileURL = imageCache.objectForKey(place.recordID) as? NSURL
-    {
-      // Fetch image from cache
-      print("Get image from cache")
-      cell.imageView?.image = UIImage(data: NSData(contentsOfURL: imageFileURL)!)
-    
-    } else {
-      
-      // Fetch Image from Cloud in background
-      let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
-      let fetchRecordsImageOperation = CKFetchRecordsOperation(recordIDs: [place.recordID])
-      fetchRecordsImageOperation.desiredKeys = ["photo"]
-      fetchRecordsImageOperation.queuePriority = .VeryHigh
-      
-      fetchRecordsImageOperation.perRecordCompletionBlock = {(record: CKRecord?, recordID: CKRecordID?, error: NSError?) -> Void in
-        if (error != nil)
-        {
-          self.notifyUser("Failed to get image", message: "\(error!.localizedDescription)")
-          return
-        }
-        
-        if let placeRecord = record
-        {
-          NSOperationQueue.mainQueue().addOperationWithBlock()
-          {
-            if let imageAsset = placeRecord.objectForKey("photo") as? CKAsset
-            {
-              cell.imageView?.image = UIImage(data: NSData(contentsOfURL: imageAsset.fileURL)!)
-              
-              // Add the image URL to cache
-              self.imageCache.setObject(imageAsset.fileURL, forKey: place.recordID)
-            }
-          }
-        }
-      }
-      publicDatabase.addOperation(fetchRecordsImageOperation)
-    }
     // Apply round corner
     cell.layer.cornerRadius = 4.0
     
     return cell
   }
   
-  // MARK: Model Delegate
+  // MARK: Navigation
   
-  // FoodPin's Method
-  func getRecordsFromCloud()
+  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
   {
-    // Remove existing records before refreshing
-    places.removeAll()
-    collectionView.reloadData()
-    
-    // Fetch data using Convenience API
-    let cloudContainer = CKContainer.defaultContainer()
-    let publicDatabase = cloudContainer.publicCloudDatabase
-    let predicate = NSPredicate(value: true)
-    let query = CKQuery(recordType: "Places", predicate: predicate)
-    query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
-    
-    // Create the query operation with the query
-    let queryOperation = CKQueryOperation(query: query)
-    queryOperation.desiredKeys = ["name", "address", "rating"]
-    queryOperation.queuePriority = .VeryHigh
-    queryOperation.resultsLimit = 50
-    queryOperation.recordFetchedBlock = { (record: CKRecord!) -> Void in
-      if let placeRecord = record
+    if segue.identifier == kShowDetailSegueId
+    {
+      let detailedViewController = segue.destinationViewController as! DetailedViewController
+      
+      // Get the cell that generated this segue
+      if let selectedPlaceCell = sender as? DiscoverCollectionViewCell
       {
-        self.places.append(placeRecord)
+        let indexPath =  collectionView.indexPathForCell(selectedPlaceCell)!
+        let selectedPlace = places[indexPath.row]
+        detailedViewController.place = selectedPlace
       }
     }
-  
-    queryOperation.queryCompletionBlock = { (cursor: CKQueryCursor?, error: NSError?) -> Void in
-      if (error != nil)
-      {
-        self.notifyUser("Failed to get data from iCloud ", message: "\(error!.localizedDescription)")
-      }
-      
-      print("Success with fetching")
-      
-      //self.refreshControl.endRefreshing()
-      NSOperationQueue.mainQueue().addOperationWithBlock()
-      {
-        self.spinner.stopAnimating()
-        self.collectionView.reloadData()
-      }
-    }
-    // Execute the query
-    publicDatabase.addOperation(queryOperation)
   }
   
-  @IBAction func refreshAction(sender: UIBarButtonItem)
-  {
-    getRecordsFromCloud()
-  }
-  
-//  func modelUpdated()
-//  {
-//    collectionView.reloadData()
-//  }
-//  
-//  func errorUpdating(error: NSError)
-//  {
-//    let message = error.localizedDescription
-//    self.notifyUser("Error Loading", message: message)
-//  }
-  
-  
-  
-  
-  //  let WifiSharingType : String = "WifiPassword"
-  
-//  var resultController: CloudKitFetchedResultController?
-//  var placeObjectList: [PlaceObject] = []
-//  var currentLocation: CLLocation?
-//  var locationManager: CLLocationManager?
-//  let radiusSearch: Float = 100000 // meters
-//  
 
-
-  
-
-
-  
-  // MARK: - DiscoverCollectionViewDelegate Methods
-  
-//  func didFavoriteButtonPressed(cell: DiscoverCollectionViewCell)
-//  {
-//    if let indexPath = collectionView.indexPathForCell(cell)
-//    {
-////      discoveries[indexPath.row].isFavorite = discoveries[indexPath.row].isFavorite ? false : true
-////      cell.isFavorite = discoveries[indexPath.row].isFavorite
-//    }
-//  }
-  
-//  // MARK: CloudKit Predicate
-//  
-//  func getDataFromCloudWithPredicate(predicate predicate: NSPredicate)
-//  {
-//    resultController!.predicate = predicate
-//    resultController!.fetchFromCloud()
-//  }
-//  
-//  // MARK: Fetched Result Controller Delegate
-//  
-//  func cloudKitFetchedResultControllerErrorFetchingResult(error: NSError)
-//  {
-//    self.notifyUser("Searching Error", message: "Error while searching. Please try again.")
-//  }
-//  
-//  func CloudKitFetchedResultControllerPlaceObjectDidFetchingResultSuccess()
-//  {
-//    self.collectionView.reloadData()
-//  }
-//  
-//  func cloudKitFetchedResultControllerPlaceObjectDidFetchingSuccessButHaveNoResult()
-//  {
-//    self.notifyUser("Searching Success", message: "No results near you.")
-//    self.collectionView.reloadData()
-//  }
-//  
-
-  
-  // Location Manager Delegate
-//  
-//  func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus)
-//  {
-//    switch (status)
-//    {
-//    case CLAuthorizationStatus.AuthorizedWhenInUse:
-//      manager.startUpdatingLocation()
-//      break
-//    case CLAuthorizationStatus.Restricted:
-//      self.notifyUser("Permission Denied", message: "You must enable location permission in setting")
-//      break
-//    case CLAuthorizationStatus.Denied:
-//      self.notifyUser("Permission Denied", message: "You must enable location permission in setting")
-//      break
-//    default:
-//      break
-//    }
-//  }
-//  
-//  func locationManager(manager: CLLocationManager, didFailWithError error: NSError)
-//  {
-//    self.notifyUser("Error", message: "Error when try to get your location. Please try again.")
-//  }
-//  
-//  func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
-//  {
-//    let location: CLLocation? = locations.last
-//    manager.stopUpdatingLocation()
-//    if location == nil
-//    {
-//      self.notifyUser("Error", message: "Error when try to get your location. Please try again.")
-//    }
-//    let predicate: NSPredicate = NSPredicate(format: "distanceToLocation:fromLocation:(%K,%@) < %f","Location", location!, radiusSearch)
-//    getDataFromCloudWithPredicate(predicate: predicate)
-//  }
-  
-  func notifyUser(title: String, message: String) -> Void
-  {
-    let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-    let cancelAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
-    alert.addAction(cancelAction)
-    self.presentViewController(alert, animated: true, completion: nil)
-  }
-  
-  
 }
 
-//  let container = CKContainer.defaultContainer()
-//  var publidDatabase: CKDatabase?
-//  //??
-//  var currentRecord: CKRecord?
-//  var places = [UIImage]()
-//  var photoURL: NSURL?
+
+
+
 //
-//  private var discoveries = [Discover(name: "Paris001", address: "Paris", comment: nil, photo: UIImage(named: "paris"), rating: 5, isFavorite: false),
-//    Discover(name: "Rome001", address: "Rome", comment: nil, photo: UIImage(named: "rome"), rating: 4, isFavorite: false),
-//    Discover(name: "London001", address: "London", comment: nil, photo: UIImage(named: "london"), rating: 3, isFavorite: false)
-//    ]
+//import UIKit
 //
+//private let kShowDetailSegueId = "showDetailSegueId"
+//
+//class MainViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate {
+//  
+//  @IBOutlet private var tableView: UITableView!
+//  @IBOutlet private var indicatorView: UIActivityIndicatorView!
+//  
+//  private var cities = [City]()
+//  
+//  // MARK: Life cycle
+//  override func viewDidLoad() {
+//    super.viewDidLoad()
+//    
+//    setupView()
+//    
+//    reloadCities()
+//  }
+//  
+//  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+//    if segue.identifier == kShowDetailSegueId {
+//      
+//      let selectedRows: [NSIndexPath] = self.tableView.indexPathsForSelectedRows!
+//      let selectedIndexPath = selectedRows.last
+//      
+//      let detailedVC = segue.destinationViewController as! DetailedViewController
+//      detailedVC.city = self.cities[selectedIndexPath!.row]
+//    }
+//  }
+//  
+//  // MARK: Private
+//  private func setupView() {
+//    let cellNib = UINib(nibName: CityTableViewCell.nibName(), bundle: nil)
+//    tableView.registerNib(cellNib, forCellReuseIdentifier: CityTableViewCell.reuseIdentifier())
+//    tableView.tableFooterView = UIView()
+//  }
+//  
+//  @IBAction func reloadCities() {
+//    shouldAnimateIndicator(true)
+//    CloudKitManager.checkLoginStatus { isLogged in
+//      self.shouldAnimateIndicator(false)
+//      if isLogged {
+//        self.updateData()
+//      } else {
+//        print("account unavailable")
+//      }
+//    }
+//  }
+//  
+//  private func updateData() {
+//    shouldAnimateIndicator(true)
+//    
+//    CloudKitManager.fetchAllCities { (records, error) in
+//      self.shouldAnimateIndicator(false)
+//      
+//      guard let cities = records else {
+//        self.presentMessage(error.localizedDescription)
+//        return
+//      }
+//      
+//      guard !cities.isEmpty else {
+//        self.presentMessage("Add City from the default list. Database is empty")
+//        return
+//      }
+//      
+//      self.cities = cities
+//      self.tableView.reloadData()
+//    }
+//  }
+//  
+//  private func addCity(city: City) {
+//    cities.insert(city, atIndex: 0)
+//    tableView.reloadData()
+//  }
+//  
+//  private func removeCity(city: City) {
+//    cities = self.cities.filter { (current: City) -> Bool in
+//      return current != city
+//    }
+//    tableView.reloadData()
+//  }
+//  
+//  private func shouldAnimateIndicator(animate: Bool) {
+//    if animate {
+//      self.indicatorView.startAnimating()
+//    } else {
+//      self.indicatorView.stopAnimating()
+//    }
+//    
+//    self.tableView?.userInteractionEnabled = !animate
+//    self.navigationController?.navigationBar.userInteractionEnabled = !animate
+//  }
+//  
+//  // MARK: IBActions
+//  @IBAction func unwindToMainViewController(segue: UIStoryboardSegue) {
+//    if let source = segue.sourceViewController as? SelectCityViewController {
+//      addCity(source.selectedCity)
+//    } else if let source = segue.sourceViewController as? DetailedViewController {
+//      removeCity(source.city)
+//    }
+//    
+//    self.navigationController?.popToViewController(self, animated: true)
+//  }
+//  
+//  // MARK: UITableViewDataSource
+//  func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+//    return cities.count
+//  }
+//  
+//  func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+//    
+//    let cell = tableView.dequeueReusableCellWithIdentifier(CityTableViewCell.reuseIdentifier()) as! CityTableViewCell
+//    
+//    let city = self.cities[indexPath.row]
+//    cell.setCity(city)
+//    
+//    return cell
+//  }
+//  
+//  // MARK: UITableViewDelegate
+//  func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+//    self.performSegueWithIdentifier(kShowDetailSegueId, sender: self)
+//  }
+//}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -339,12 +297,12 @@ class DiscoverViewController: UIViewController, UICollectionViewDataSource, UICo
 //{
 //  var detailsViewController: DetailsViewController? = nil
 //  var locationManager: CLLocationManager!
-//  
+//
 //  let model: Model = Model.sharedInstance()
-//  
+//
 //  override func viewDidLoad() {
 //    super.viewDidLoad()
-//    
+//
 //    //setupLocationManager()
 //    model.delegate = self
 //    model.refresh()
@@ -460,4 +418,53 @@ class DiscoverViewController: UIViewController, UICollectionViewDataSource, UICo
 //  
 //  
 //  
+//}
+
+
+//
+//
+//// MARK:- prepareForSegue
+//
+//override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+//  
+//  // retrieve selected cell & fruit
+//  
+//  if let indexPath = getIndexPathForSelectedCell() {
+//    
+//    let fruit = dataSource.fruitsInGroup(indexPath.section)[indexPath.row]
+//    
+//    let detailViewController = segue.destinationViewController as! DetailViewController
+//    detailViewController.fruit = fruit
+//  }
+//}
+//
+//// MARK:- Should Perform Segue
+//
+//override func shouldPerformSegueWithIdentifier(identifier: String?, sender: AnyObject?) -> Bool {
+//  return !editing
+//}
+//
+//// MARK:- Selected Cell IndexPath
+//
+//func getIndexPathForSelectedCell() -> NSIndexPath? {
+//  
+//  var indexPath:NSIndexPath?
+//  
+//  if collectionView.indexPathsForSelectedItems()!.count > 0 {
+//    indexPath = collectionView.indexPathsForSelectedItems()![0] as? NSIndexPath
+//  }
+//  return indexPath
+//}
+//
+//// MARK:- Highlight
+//
+//func highlightCell(indexPath : NSIndexPath, flag: Bool) {
+//  
+//  let cell = collectionView.cellForItemAtIndexPath(indexPath)
+//  
+//  if flag {
+//    cell?.contentView.backgroundColor = UIColor.magentaColor()
+//  } else {
+//    cell?.contentView.backgroundColor = nil
+//  }
 //}
