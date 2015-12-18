@@ -41,6 +41,80 @@ final class CloudKitManager
     }
   }
 
+  // MARK: Add a new record
+  
+    
+//  func saveRecord(entry : DiaryEntry) {
+//    let entryRecord = CKRecord(recordType: "DiaryEntry")
+//    entryRecord.setValue(entry.blurb!, forKey: "Blurb")
+//    entryRecord.setValue(entry.mood, forKey: "Mood")
+//    entryRecord.setObject(entry.entryDate, forKey: "Date")
+//    if entry.location != nil {
+//      entryRecord.setValue(entry.location!, forKey: "Location")
+//    }
+//    if entry.temperature != nil {
+//      entryRecord.setValue(entry.temperature!, forKey: "Temp")
+//    }
+//    if entry.weather != nil {
+//      entryRecord.setValue(entry.weather!, forKey: "Weather")
+//    }
+//    if entry.weatherIcon != nil {
+//      entryRecord.setValue(entry.weatherIcon!, forKey: "WeatherIcon")
+//    }
+//    if entry.coordinates != nil {
+//      entryRecord.setObject(entry.coordinates!, forKey: "Coordinates")
+//    }
+//    if entry.photoURL != nil {
+//      let asset = CKAsset(fileURL: entry.photoURL!)
+//      entryRecord.setObject(asset, forKey: "photo")
+//    }
+//    
+//    privateDB.saveRecord(entryRecord, completionHandler: { (record, error) -> Void in
+//      if ( error != nil )
+//      {
+//        print("Error saving to cloud kit \(error!.description)", terminator: "\n")
+//      }
+//      else
+//      {
+//        print("Saved to cloud kit", terminator: "\n")
+//      }
+//    })
+//  }
+  
+  
+//  static func createRecord(recordData: [String: String], completion: (record: CKRecord?, error: NSError!) -> Void)
+//  {
+//    let record = CKRecord(recordType: recordType)
+//    
+//    for (key, value) in recordData
+//    {
+//      if key == placePhoto
+//      {
+//        if let path = NSBundle.mainBundle().pathForResource(value, ofType: "jpg")
+//        {
+//          do {
+//            let data = try NSData(contentsOfURL: NSURL(fileURLWithPath: path), options: .DataReadingMappedIfSafe)
+//            record.setValue(data, forKey: key)
+//          } catch let error {
+//            print(error)
+//          }
+//        }
+//      }
+//      else {
+//        record.setValue(value, forKey: key)
+//      }
+//    }
+//    
+//    publicCloudDatabase().saveRecord(record, completionHandler: { (savedRecord, error) in
+//      dispatch_async(dispatch_get_main_queue())
+//      {
+//        completion(record: record, error: error)
+//      }
+//    })
+//  }
+  
+  
+  
   
 }
 //

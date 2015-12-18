@@ -12,7 +12,7 @@ import CloudKit
 import MobileCoreServices
 import CoreLocation
 
-class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate
+class AddPlaceViewController: BaseViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate
 {
   // MARK: Outlets
 
@@ -119,14 +119,9 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
     dismissViewControllerAnimated(true, completion: nil)
   }
   
-//  @IBAction func saveAction(sender: UIBarButtonItem)
-//  {
-//    savePlace()
-//    saveRecordToCloud(self)
-//    self.navigationController?.popToRootViewControllerAnimated(true)
-//  }
-//  // This method lets you configure a view controller before it's presented
-//  
+
+  // This method lets you configure a view controller before it's presented
+ 
   override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
   {
     if saveButton === sender
@@ -183,7 +178,7 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
   {
     if (photoURL == nil)
     {
-      notifyUser("No Photo", message: "Use the Photo option to choose a photo")
+      self.presentMessage("No Photo", message: "Use the Photo option to choose a photo")
     }
     
     let asset = CKAsset(fileURL: photoURL!)
@@ -219,7 +214,7 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
           ({ returnRecord, error in
             if let err = error
             {
-              self.notifyUser("Save Error", message: err.localizedDescription)
+              self.presentMessage("Save Error", message: err.localizedDescription)
             }
             else {
               dispatch_async(dispatch_get_main_queue())
@@ -250,16 +245,29 @@ class AddPlaceViewController: UIViewController, UITextFieldDelegate, UIImagePick
 //        }
 //      }))
   }
-  
-  func notifyUser(title: String, message: String) -> Void
-  {
-    let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-    
-    let cancelAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
-    
-    alert.addAction(cancelAction)
-    self.presentViewController(alert, animated: true, completion: nil)
-  }
+
   
   
 }
+
+//@IBAction private func saveButtonDidPress(button:UIButton) {
+//  if let selectedIndexPath = tableView.indexPathsForSelectedRows?.last {
+//    let cityData = City.defaultContent()[selectedIndexPath.row]
+//    shouldAnimateIndicator(true)
+//    CloudKitManager.createRecord(cityData, completion: { (record, error) -> Void in
+//      self.shouldAnimateIndicator(false)
+//      
+//      if let record = record {
+//        self.selectedCity = City(record: record)
+//        self.performSegueWithIdentifier(kUnwindSelectCitySegue, sender: self)
+//      } else {
+//        self.presentMessage(error.localizedDescription)
+//      }
+//    })
+//  }
+//}
+
+
+
+
+
