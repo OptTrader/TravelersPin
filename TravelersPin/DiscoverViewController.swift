@@ -36,8 +36,16 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
   
   private func setupView()
   {
+    // Change navigation bar's appearance
+    let nav = self.navigationController?.navigationBar
+    nav?.translucent = true
+    nav?.shadowImage = UIImage()
+    nav?.setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
+    nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+    nav?.tintColor = UIColor.whiteColor()
+
     // Apply blurring effect
-    backgroundImageView.image = UIImage(named: "backgroundImage")
+    backgroundImageView.image = UIImage(named: "dusk")
     let blurEffect = UIBlurEffect(style: .Dark)
     let blurEffectView = UIVisualEffectView(effect: blurEffect)
     blurEffectView.frame = view.bounds

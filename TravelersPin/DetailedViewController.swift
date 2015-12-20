@@ -30,8 +30,16 @@ class DetailedViewController: BaseViewController
   
   // MARK: Private
   
-  func setupView()
+  private func setupView()
   {
+    // Change navigation bar's appearance
+    let nav = self.navigationController?.navigationBar
+    nav?.translucent = true
+    nav?.shadowImage = UIImage()
+    nav?.setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
+    nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+    nav?.tintColor = UIColor.whiteColor()
+    
     if let place = place
     {
       navigationItem.title = place.name

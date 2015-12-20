@@ -13,8 +13,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate
 {
   var window: UIWindow?
 
-  func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-    // Override point for customization after application launch.
+  func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool
+  {
+    // Change the navigation bar's appearance
+
+    UINavigationBar.appearance().barTintColor = UIColor(red: 245.0/255.0, green: 100.0/255.0, blue: 47.0/255.0, alpha: 1.0)
+    UINavigationBar.appearance().tintColor = UIColor.whiteColor()
+    
+    if let barFont = UIFont(name: "Avenir-Light", size: 20.0)
+    {
+      UINavigationBar.appearance().titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor(), NSFontAttributeName: barFont]
+    }
+    
+//    let nav = self.navigationController?.navigationBar
+//    nav?.translucent = true
+//    nav?.shadowImage = UIImage()
+//    nav?.setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
+//    nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+//    nav?.tintColor = UIColor.whiteColor()
+    
+    
+    
+    
+    // Change the tab bar's appearance
+    UITabBar.appearance().barTintColor = UIColor(red: 241.0/255.0, green: 242.0/255.0, blue: 245.0/255.0, alpha: 1.0)
+    
+    // Change the status bar's appearance
+    UIApplication.sharedApplication().statusBarStyle = .LightContent
+  
     return true
   }
 
