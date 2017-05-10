@@ -9,18 +9,15 @@
 import UIKit
 import RealmSwift
 
+private let kShowFavoriteDetailSegueId = "showFavoriteDetailSegue"
+
 class FavoritesTableViewController: UITableViewController
 {
   // MARK: Properties
   
-  var datasource: Results<PlaceItem>!
+  var datasource: Results<PlaceItem>?
   
-//  private var discoveries = [Discover(name: "Paris001", address: "Paris", comment: nil, photo: UIImage(named: "paris"), rating: 5, isFavorite: false),
-//    Discover(name: "Rome001", address: "Rome", comment: nil, photo: UIImage(named: "rome"), rating: 4, isFavorite: false),
-//    Discover(name: "London001", address: "London", comment: nil, photo: UIImage(named: "london"), rating: 3, isFavorite: false)
-//  ]
-  
-  // MARK: View Controller Lifecycle
+  // MARK: View Life Cycle
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -28,6 +25,7 @@ class FavoritesTableViewController: UITableViewController
     // Use the edit button item provided by the table view controller
     navigationItem.leftBarButtonItem = editButtonItem()
     
+    setupView()
     reloadTheTable()
   }
   
@@ -35,9 +33,42 @@ class FavoritesTableViewController: UITableViewController
     super.viewWillAppear(true)
     
     reloadTheTable()
+    
+    // Navigation Bar Appearance
+    navigationBarSetupView()
   }
 
-  // MARK: - Table View Data source
+  // MARK: Configuration
+  
+  private func setupView()
+  {
+    // Customize table view appearance
+    tableView.backgroundColor = UIColor(red: 240.0/255.0, green: 240.0/255.0, blue: 240.0/255.0, alpha: 0.2)
+    tableView.tableFooterView = UIView(frame: CGRectZero)
+  }
+  
+  private func navigationBarSetupView()
+  {
+    // Change the navigation bar's appearance
+    UINavigationBar.appearance().barTintColor = UIColor.blackColor()
+    UINavigationBar.appearance().tintColor = UIColor.whiteColor()
+    
+    if let barFont = UIFont(name: "Avenir-Light", size: 20.0)
+    {
+      UINavigationBar.appearance().titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor(), NSFontAttributeName: barFont]
+    }
+  }
+  
+  // MARK: Actions
+  
+  // Fetch data from Realm
+  func reloadTheTable()
+  {
+    datasource = PlaceDataController.fetchAllPlaces()
+    tableView?.reloadData()
+  }
+  
+  // MARK: UITableViewDataSource
 
   override func numberOfSectionsInTableView(tableView: UITableView) -> Int
   {
@@ -46,23 +77,28 @@ class FavoritesTableViewController: UITableViewController
 
   override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int
   {
-    return datasource.count
+    return datasource?.count ?? 0
   }
   
   override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell
   {
     // Table view cells are reused and should be dequeued using a cell identifier
     let cellIdentifier = "FavoritesTableViewCell"
+    
     let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! FavoritesTableViewCell
     
     // Fetches the appropriate place for the data source layout
-    let place = datasource[indexPath.row]
+    let place = datasource![indexPath.row]
     
     cell.nameLabel.text = place.name
-    cell.addressLabel.text = place.address
     cell.photoImageView.image = UIImage(data: place.photo!)
     cell.ratingControl.rating = place.rating
- 
+    
+    cell.backgroundColor = UIColor.clearColor()
+    cell.selectionStyle = UITableViewCellSelectionStyle.None
+    cell.rippleLocation = .Center
+    cell.rippleLayerColor = UIColor.MKColor.DeepOrange
+    
     return cell
   }
   
@@ -79,7 +115,7 @@ class FavoritesTableViewController: UITableViewController
     if editingStyle == .Delete
     {
       // Delete the row from the data source
-      let selectedPlace = datasource[indexPath.row]
+      let selectedPlace = datasource![indexPath.row]
       PlaceDataController.deletePlace(selectedPlace)
       tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
       reloadTheTable()
@@ -95,20 +131,17 @@ class FavoritesTableViewController: UITableViewController
   
   override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
   {
-    if segue.identifier == "ShowDetail"
+    if segue.identifier == kShowFavoriteDetailSegueId
     {
-      let detailViewController = segue.destinationViewController as! DetailViewController
+      let favoriteDetailViewController = segue.destinationViewController as! FavoriteDetailViewController
 
       // Get the cell that generated this segue
       if let selectedPlaceCell = sender as? FavoritesTableViewCell
       {
         let indexpath = tableView.indexPathForCell(selectedPlaceCell)!
-        let selectedPlace = datasource[indexpath.row]
-        detailViewController.place = selectedPlace
+        let selectedPlace = datasource![indexpath.row]
+        favoriteDetailViewController.place = selectedPlace
       }
-    }
-    else if segue.identifier == "AddPlace"
-    {
     }
   }
 
@@ -116,12 +149,4 @@ class FavoritesTableViewController: UITableViewController
   {
   }
   
-  // MARK: Fetch data from Realm
-
-  func reloadTheTable()
-  {
-    datasource = PlaceDataController.fetchAllPlaces()
-    tableView?.reloadData()
-  }
-
 }

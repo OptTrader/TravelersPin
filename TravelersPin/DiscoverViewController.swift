@@ -7,32 +7,55 @@
 //
 
 import UIKit
+import CloudKit
 
-private let kShowDetailSegueId = "showDetailSegueId"
+private let kShowDetailedSegueId = "showDiscoverDetailedSegue"
 
-class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UICollectionViewDelegate
+class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UICollectionViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate
 {
   // MARK: Properties
 
   @IBOutlet weak var backgroundImageView: UIImageView!
   @IBOutlet weak var collectionView: UICollectionView!
-  @IBOutlet var spinner: UIActivityIndicatorView!
   
-  private var places = [Place]()
+  var searchCompleted = false
+  var queryOperation = CKQueryOperation()
+  let timeDelay = 15.0
+  
+  var places = [Place]()
+  var activityIndicatorView: NVActivityIndicatorView!
+  let picker = UIImagePickerController()
 
-  // MARK: View Controller's Lifecycle
+  // MARK: View Life Cycle
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
     // View Appearance
     setupView()
-
-    // Reload data
+    
+    // Load contents
     updateData()
   }
   
-  // MARK: Private
+  override func viewDidAppear(animated: Bool) {
+    super.viewDidAppear(animated)
+    
+    let defaults = NSUserDefaults.standardUserDefaults()
+    let hasViewedWalkthrough = defaults.boolForKey("hasViewedWalkthrough")
+    
+    if hasViewedWalkthrough
+    {
+      return
+    }
+    
+    if let pageViewController = storyboard?.instantiateViewControllerWithIdentifier("WalkthroughController") as? WalkthroughPageViewController
+    {
+      presentViewController(pageViewController, animated: true, completion: nil)
+    }
+  }
+  
+  // MARK: Configuration
   
   private func setupView()
   {
@@ -41,10 +64,13 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
     nav?.translucent = true
     nav?.shadowImage = UIImage()
     nav?.setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
-    nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+    if let barFont = UIFont(name: "Avenir-Light", size: 20.0)
+    {
+      nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor(), NSFontAttributeName: barFont]
+    }
     nav?.tintColor = UIColor.whiteColor()
-
-    // Apply blurring effect
+    
+    // Background's apprearance and blurring effect
     backgroundImageView.image = UIImage(named: "dusk")
     let blurEffect = UIBlurEffect(style: .Dark)
     let blurEffectView = UIVisualEffectView(effect: blurEffect)
@@ -61,19 +87,130 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
       flowLayout.itemSize = CGSizeMake(250.0, 300.0)
     }
     
-    // Spinner
-    spinner.hidesWhenStopped = true
-    spinner.center = view.center
-    spinner.color = UIColor.whiteColor()
-    view.addSubview(spinner)
+    // Custom activity indicator
+    let frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+    self.activityIndicatorView = NVActivityIndicatorView(frame: frame, type: .BallClipRotatePulse, color: UIColor.orangeColor(), padding: 30)
+    self.activityIndicatorView.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2 - 150)
+    self.view.addSubview(activityIndicatorView)
     
     // Refresh
-    self.navigationItem.setLeftBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "refreshAction"), animated: true)
+    let refreshButton = MKButton()
+    refreshButton.setImage(UIImage(named: "refresh"), forState: .Normal)
+    refreshButton.frame = CGRectMake(0, 0, 25, 25)
+    refreshButton.addTarget(self, action: #selector(DiscoverViewController.refreshAction), forControlEvents: .TouchUpInside)
+    refreshButton.maskEnabled = false
+    refreshButton.ripplePercent = 1.75
+    refreshButton.rippleLayerColor = UIColor.MKColor.Grey
+    refreshButton.backgroundAniEnabled = false
+    refreshButton.rippleLocation = .Center
+    
+    let leftBarButton = UIBarButtonItem()
+    leftBarButton.customView = refreshButton
+    self.navigationItem.leftBarButtonItem = leftBarButton
+    
+    // Add New Place
+    let cameraButton = MKButton()
+    cameraButton.setImage(UIImage(named: "camera"), forState: .Normal)
+    cameraButton.frame = CGRectMake(0, 0, 30, 30)
+    cameraButton.addTarget(self, action: #selector(DiscoverViewController.addAction), forControlEvents: .TouchUpInside)
+    cameraButton.maskEnabled = false
+    cameraButton.ripplePercent = 1.75
+    cameraButton.rippleLayerColor = UIColor.MKColor.Grey
+    cameraButton.backgroundAniEnabled = false
+    cameraButton.rippleLocation = .Center
+    
+    let rightBarButton = UIBarButtonItem()
+    rightBarButton.customView = cameraButton
+    
+    // spport the initial animation.
+    rightBarButton.customView!.transform = CGAffineTransformMakeScale(0, 0)
+    
+    // animate the button to normal size
+    UIView.animateWithDuration(1.0,
+      delay: 0.5,
+      usingSpringWithDamping: 0.5,
+      initialSpringVelocity: 10,
+      options: .CurveLinear,
+      animations:
+      {
+        rightBarButton.customView!.transform = CGAffineTransformIdentity
+      },
+      completion: nil
+    )
+
+    self.navigationItem.rightBarButtonItem = rightBarButton
   }
   
-  //  override func preferredStatusBarStyle() -> UIStatusBarStyle {
-  //    return UIStatusBarStyle.LightContent
-  //  }
+  // MARK: Actions
+  
+  func shouldAnimatedIndicator(animate: Bool)
+  {
+    if animate
+    {
+      self.activityIndicatorView.startAnimation()
+    } else {
+      self.activityIndicatorView.stopAnimation()
+    }
+  }
+
+  func updateData()
+  {
+    AccountService.accountStatus { available in
+      if available == true
+      {
+        self.shouldAnimatedIndicator(true)
+        
+        // Create the initial query
+        let predicate = NSPredicate(value: true)
+        
+        let query = CKQuery(recordType: "Places", predicate: predicate)
+        query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        self.queryOperation = CKQueryOperation(query: query)
+        self.queryOperation.desiredKeys = ["recordID", "name", "address", "comment", "rating", "location"]
+        self.queryOperation.queuePriority = .VeryHigh
+        self.queryOperation.qualityOfService = .UserInteractive
+        self.queryOperation.resultsLimit = 50
+        
+        self.queryOperation.recordFetchedBlock = { record in
+          let place = Place(record: record)
+          self.places.append(place)
+        }
+        
+        self.queryOperation.queryCompletionBlock = { (cursor:CKQueryCursor?, error: NSError?) -> Void in
+          
+          if (error != nil)
+          {
+            self.presentMessage("Error", message: "Results were not able to be retrieved. Please check your internet and iCloud settings and try again.")
+            self.shouldAnimatedIndicator(false)
+            return
+          }
+          else {
+            self.searchCompleted = true
+          }
+        }
+        
+        CKContainer.defaultContainer().publicCloudDatabase.addOperation(self.queryOperation)
+        
+        self.delay(self.timeDelay)
+        {
+          if self.searchCompleted != true
+          {
+            self.queryOperation.cancel()
+            self.shouldAnimatedIndicator(false)
+            self.presentMessage("Poor network connection", message: "Results were not able to be retrieved with current network settings. Please check your internet and iCloud settings and try again.")
+          }
+            
+          else {
+            self.shouldAnimatedIndicator(false)
+            self.collectionView.reloadData()
+          }
+        }
+      }
+      else {
+        self.presentMessage("You're not logged in", message: "Please go to iCloud settings and log in with your credentials.")
+      }
+    }
+  }
 
   func refreshAction()
   {
@@ -82,32 +219,60 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
     self.updateData()
   }
 
-  func updateData()
+  func addAction()
   {
-    shouldAnimatedIndicator(true)
+    let alert = UIAlertController(title: "Choose Image", message: nil, preferredStyle: UIAlertControllerStyle.ActionSheet)
     
-    CloudKitManager.fetchAllRecords { (records, error) in
-      self.shouldAnimatedIndicator(false)
-      
-      guard let places = records else
+    let cameraAction = UIAlertAction(title: "Take Photo", style: UIAlertActionStyle.Default)
+    {
+      UIAlertAction in
+      self.openCamera()
+    }
+  
+    let libraryAction = UIAlertAction(title: "Choose From Library", style: UIAlertActionStyle.Default)
+    {
+      UIAlertAction in
+      self.openLibrary()
+    }
+    
+    let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Default)
       {
-        self.presentMessage("Error", message: error.localizedDescription)
-        return
-      }
-      
-      self.places = places
-      self.collectionView.reloadData()
+      UIAlertAction in
+    }
+  
+    alert.addAction(cameraAction)
+    alert.addAction(libraryAction)
+    alert.addAction(cancelAction)
+    
+    // Present the controller
+    self.presentViewController(alert, animated: true, completion: nil)
+  }
+
+  func openCamera()
+  {
+    if UIImagePickerController.availableCaptureModesForCameraDevice(.Rear) != nil
+    {
+      picker.delegate = self
+      picker.allowsEditing = false
+      picker.sourceType = UIImagePickerControllerSourceType.Camera
+      picker.cameraCaptureMode = .Photo
+      presentViewController(picker, animated: true, completion: nil)
+    } else {
+      noCamera()
     }
   }
   
-  private func shouldAnimatedIndicator(animate: Bool)
+  func openLibrary()
   {
-    if animate
-    {
-      self.spinner.startAnimating()
-    } else {
-      self.spinner.stopAnimating()
-    }
+    picker.delegate = self
+    picker.allowsEditing = false
+    picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+    self.presentViewController(picker, animated: true, completion: nil)
+  }
+  
+  func noCamera()
+  {
+    self.presentMessage("No Camera", message: "Sorry, there is no camera with this device")
   }
   
   // MARK: Collection View Data Source
@@ -127,7 +292,14 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
     let cell = collectionView.dequeueReusableCellWithReuseIdentifier("DiscoverCollectionViewCell", forIndexPath: indexPath) as! DiscoverCollectionViewCell
     
     let place = self.places[indexPath.row]
-    cell.setPlace(place)
+    
+    cell.nameLabel.text = place.name
+    cell.addressLabel.text = place.address
+
+    // Set default image
+    cell.imageView.backgroundColor = UIColor.darkGrayColor()
+    
+    cell.imageView.agCKImageAsset(place.record.recordID, assetKey: "photo")
     
     // Apply round corner
     cell.layer.cornerRadius = 4.0
@@ -135,210 +307,48 @@ class DiscoverViewController: BaseViewController, UICollectionViewDataSource, UI
     return cell
   }
   
+  // MARK: UIImagePickerControllerDelegate
+  
+  func imagePickerControllerDidCancel(picker: UIImagePickerController)
+  {
+    // Dismiss the picker if the user canceled
+    dismissViewControllerAnimated(true, completion: nil)
+  }
+  
+  func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject])
+  {
+    if let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
+    {
+      let vc = storyboard!.instantiateViewControllerWithIdentifier("newPlaceViewController") as! NewPlaceViewController
+      vc.image = selectedImage
+      picker.dismissViewControllerAnimated(true, completion: nil)
+      
+      let navigationController = UINavigationController(rootViewController: vc)
+      
+      self.presentViewController(navigationController, animated: true, completion: nil)
+    }
+  }
+  
   // MARK: Navigation
+  
+  // In a storyboard-based application, you will often want to do a little preparation before navigation
   
   override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
   {
-    if segue.identifier == kShowDetailSegueId
+    if segue.identifier == kShowDetailedSegueId
     {
       let detailedViewController = segue.destinationViewController as! DetailedViewController
       
       // Get the cell that generated this segue
       if let selectedPlaceCell = sender as? DiscoverCollectionViewCell
       {
-        let indexPath =  collectionView.indexPathForCell(selectedPlaceCell)!
+        let indexPath = collectionView.indexPathForCell(selectedPlaceCell)!
         let selectedPlace = places[indexPath.row]
         detailedViewController.place = selectedPlace
+        detailedViewController.recordID = selectedPlace.record.recordID
+
       }
     }
   }
   
-
 }
-
-
-
-
-
-
-
-
-//
-//import UIKit
-//import CoreLocation
-//
-//class PlaceTableViewController: UITableViewController, ModelDelegate, CLLocationManagerDelegate
-//{
-//  var detailsViewController: DetailsViewController? = nil
-//  var locationManager: CLLocationManager!
-//
-//  let model: Model = Model.sharedInstance()
-//
-//  override func viewDidLoad() {
-//    super.viewDidLoad()
-//
-//    //setupLocationManager()
-//    model.delegate = self
-//    model.refresh()
-//    
-//    // setup a refresh control
-//    refreshControl = UIRefreshControl()
-//    refreshControl?.addTarget(model, action: "refresh", forControlEvents: .ValueChanged)
-//  }
-//  
-//  // MARK: Segues
-//  
-//  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
-//  {
-//    if segue.identifier == "showDetail"
-//    {
-//      let indexPath = self.tableView.indexPathForSelectedRow!
-//      let object = Model.sharedInstance().items[indexPath.row]
-//    }
-//  }
-//  
-//  // MARK: Table view data source
-//  
-//  override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-//    
-//    return 1
-//  }
-//  
-//  override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int
-//  {
-//    return Model.sharedInstance().items.count
-//  }
-//  
-//  override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell
-//  {
-//    let cell = tableView.dequeueReusableCellWithIdentifier("PlaceTableViewCell", forIndexPath: indexPath) as! PlaceTableViewCell
-//    
-//    let object = Model.sharedInstance().items[indexPath.row]
-//    cell.nameLabel.text = object.name
-//    cell.addressLabel.text = object.address
-//    
-//    object.loadCoverPhoto { image in
-//      dispatch_async(dispatch_get_main_queue())
-//        {
-//          cell.photo.image = image
-//      }
-//    }
-//    
-//    return cell
-//  }
-//  
-//  override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-//    
-//    let object = Model.sharedInstance().items[indexPath.row]
-//    self.detailsViewController!.detailItem = object
-//    
-//  }
-//  
-//  // MARK: Model Delegate
-//  
-//  func modelUpdated()
-//  {
-//    refreshControl?.endRefreshing()
-//    tableView.reloadData()
-//  }
-//  
-//  func errorUpdating(error: NSError)
-//  {
-//    let message = error.localizedDescription
-//    self.notifyUser("Error Loading Albums", message: message)
-//  }
-//  
-//  // MARK: Location stuff & delegate
-//  
-//  func setupLocationManager()
-//  {
-//    locationManager = CLLocationManager()
-//    locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-//    locationManager.distanceFilter = 100000000000.0 // 0.5km
-//    locationManager.delegate = self
-//    
-//    CLLocationManager.authorizationStatus()
-//  }
-//  
-//  func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus)
-//  {
-//    switch status
-//    {
-//    case .NotDetermined:
-//      manager.requestWhenInUseAuthorization()
-//    case .AuthorizedWhenInUse:
-//      manager.startUpdatingLocation()
-//    default:
-//      // do nothing
-//      print("Other status")
-//    }
-//  }
-//  
-//  func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
-//  {
-//    let loc = locations.last! as CLLocation
-//    model.fetchAlbums(loc, radiusInMeters: 30000)
-//  }
-//  
-//  // MARK: Alert
-//  
-//  func notifyUser(title: String, message: String) -> Void
-//  {
-//    let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-//    let cancelAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
-//    alert.addAction(cancelAction)
-//    self.presentViewController(alert, animated: true, completion: nil)
-//  }
-//  
-//  
-//  
-//}
-
-
-//
-//
-//// MARK:- prepareForSegue
-//
-//override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-//  
-//  // retrieve selected cell & fruit
-//  
-//  if let indexPath = getIndexPathForSelectedCell() {
-//    
-//    let fruit = dataSource.fruitsInGroup(indexPath.section)[indexPath.row]
-//    
-//    let detailViewController = segue.destinationViewController as! DetailViewController
-//    detailViewController.fruit = fruit
-//  }
-//}
-//
-//// MARK:- Should Perform Segue
-//
-//override func shouldPerformSegueWithIdentifier(identifier: String?, sender: AnyObject?) -> Bool {
-//  return !editing
-//}
-//
-//// MARK:- Selected Cell IndexPath
-//
-//func getIndexPathForSelectedCell() -> NSIndexPath? {
-//  
-//  var indexPath:NSIndexPath?
-//  
-//  if collectionView.indexPathsForSelectedItems()!.count > 0 {
-//    indexPath = collectionView.indexPathsForSelectedItems()![0] as? NSIndexPath
-//  }
-//  return indexPath
-//}
-//
-//// MARK:- Highlight
-//
-//func highlightCell(indexPath : NSIndexPath, flag: Bool) {
-//  
-//  let cell = collectionView.cellForItemAtIndexPath(indexPath)
-//  
-//  if flag {
-//    cell?.contentView.backgroundColor = UIColor.magentaColor()
-//  } else {
-//    cell?.contentView.backgroundColor = nil
-//  }
-//}

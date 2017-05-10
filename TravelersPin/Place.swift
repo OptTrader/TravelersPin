@@ -8,195 +8,82 @@
 
 import UIKit
 import CloudKit
+import MapKit
+
+// MARK: Constants
 
 let placeName = "name"
 let placeAddress = "address"
 let placeComment = "comment"
 let placePhoto = "photo"
 let placeRating = "rating"
-// let placeLocation = "location"
+let placeLocation = "location"
 
-// private let kPlacesSourcePlist = "Places"
-
-class Place
+class Place: NSObject
 {
-  // static var places: [[String: String]]!
+  // MARK: Properties
   
   var name: String
   var address: String
   var comment: String?
   var photo: UIImage?
   var rating: Int
-  // var location: CLLocation?
-  var identifer: String
+  var location: CLLocation?
+  var identifier: String
+  var record: CKRecord!
   
-  // MARK: Class methods
-//  static func defaultContent() -> [[String: String]]
-//  {
-//    if places == nil
-//    {
-//      let path = NSBundle.mainBundle().pathForResource(kPlacesSourcePlist, ofType: "plist")
-//      let plistData = NSData(contentsOfFile: path!)
-//      assert(plistData != nil, "Source doesn't exist")
-//      
-//      do {
-//        places = try NSPropertyListSerialization.propertyListWithData(plistData!, options: .MutableContainersAndLeaves, format: UnsafeMutablePointer()) as! [[String: String]]
-//      }
-//      catch _ {
-//        print("Cannot read data from the plist")
-//      }
-//    }
-//    return places
-//  }
+  // MARK: Initialization
   
   init(record: CKRecord)
   {
+    self.record = record
     self.name = record.valueForKey(placeName) as! String
     self.address = record.valueForKey(placeAddress) as! String
     self.comment = record.valueForKey(placeComment) as? String
-    
-    if let photoAsset = record.valueForKey(placePhoto) as? CKAsset
-    {
-      self.photo = UIImage(data: NSData(contentsOfURL: photoAsset.fileURL)!)
-    }
-    
     self.rating = record.valueForKey(placeRating) as! Int
-    // self.location = record.valueForKey(placeLocation) as? CLLocation
- 
-    self.identifer = record.recordID.recordName
+    self.location = record.valueForKey(placeLocation) as? CLLocation
+    
+    self.identifier = record.recordID.recordName
+  }
+  
+  // MARK: Image Fetch Method
+  
+  func loadCoverPhoto(completion:(photo: UIImage!) -> ())
+  {
+    dispatch_async(
+      dispatch_get_global_queue(
+        DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0))
+      {
+        if let asset = self.record.valueForKey(placePhoto) as? CKAsset
+        {
+          if let url: NSURL = asset.fileURL
+          {
+            let imageData = NSData(contentsOfFile: url.path!)!
+            self.photo = UIImage(data: imageData)
+          }
+        }
+      completion(photo: self.photo)
+    }
+  }
+  
+  // MARK: Map Annotation
+  
+  var coordinate: CLLocationCoordinate2D {
+    get {
+      return location!.coordinate
+    }
+  }
+  
+  var title: String! {
+    get {
+      return name
+    }
+  }
+  
+  var subtitle: String! {
+    get {
+      return address
+    }
   }
 
 }
-
-//
-//let coverPhoto = self.record.objectForKey("CoverPhoto") as CKAsset!
-//if let asset = coverPhoto {
-//  if let url = asset.fileURL {
-//    let imageData = NSData(contentsOfFile: url.path!)!
-//    image = UIImage(data: imageData)
-
-//func ==(lhs: Place, rhs: Place) -> Bool
-//{
-//  return lhs.identifer == rhs.identifer
-//}
-
-
-
-//
-//import UIKit
-//import CloudKit
-//
-//let cityName = "name"
-//let cityText = "text"
-//let cityPicture = "picture"
-//
-//private let kCitiesSourcePlist = "Cities"
-//
-//class City: Equatable {
-//  
-//  static var cities: [[String: String]]!
-//  
-//  var name: String
-//  var text: String
-//  var image: UIImage?
-//  var identifier: String
-//  
-//  // MARK: Class methods
-//  static func defaultContent() -> [[String: String]] {
-//    if cities == nil {
-//      let path = NSBundle.mainBundle().pathForResource(kCitiesSourcePlist, ofType: "plist")
-//      let plistData = NSData(contentsOfFile: path!)
-//      assert(plistData != nil, "Source doesn't exist")
-//      
-//      do {
-//        cities = try NSPropertyListSerialization.propertyListWithData(plistData!,
-//          options: .MutableContainersAndLeaves, format: UnsafeMutablePointer()) as! [[String: String]]
-//      }
-//      catch _ {
-//        print("Cannot read data from the plist")
-//      }
-//    }
-//    
-//    return cities
-//  }
-//  
-//  init(record: CKRecord) {
-//    self.name = record.valueForKey(cityName) as! String
-//    self.text = record.valueForKey(cityText) as! String
-//    if let imageData = record.valueForKey(cityPicture) as? NSData {
-//      self.image = UIImage(data:imageData)
-//    }
-//    self.identifier = record.recordID.recordName
-//  }
-//  
-//}
-//
-//func ==(lhs: City, rhs: City) -> Bool {
-//  return lhs.identifier == rhs.identifier
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//init(record: CKRecord) {
-//  self.name = record.valueForKey(cityName) as! String
-//  self.text = record.valueForKey(cityText) as! String
-//  if let imageData = record.valueForKey(cityPicture) as? NSData {
-//    self.image = UIImage(data:imageData)
-//  }
-//  self.identifier = record.recordID.recordName
-//}
-
-//import Foundation
-//import CoreLocation
-//import CloudKit
-//import UIKit
-//
-//class DiaryEntry {
-//  var blurb : String?
-//  var entryDate : NSDate
-//  var mood : Double = 0
-//  var location: String?
-//  var coordinates : CLLocation?
-//  var weather : String?
-//  var temperature : String?
-//  var weatherIcon : String?
-//  var photoURL : NSURL?
-//  var image : UIImage?
-//  
-
-
-//  
-//  init( record: CKRecord ) {
-//    blurb = record.valueForKey("Blurb") as? String
-//    entryDate = record.objectForKey("Date") as! NSDate
-//    mood = record.valueForKey("Mood") as! Double
-//    location = record.valueForKey("Location") as? String
-//    coordinates = record.objectForKey("Coordinates") as? CLLocation
-//    weather = record.valueForKey("Weather") as? String
-//    temperature = record.valueForKey("Temp") as? String
-//    weatherIcon = record.valueForKey("WeatherIcon") as? String
-//    
-//    if let photo = record.objectForKey("photo") as? CKAsset {
-//      image = UIImage(contentsOfFile: photo.fileURL.path!)
-//    }
-//    //        println("read DB entry \(self.description)")
-//  }
-//}

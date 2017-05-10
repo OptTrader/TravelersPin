@@ -18,7 +18,7 @@ class PlaceDataController: NSObject
       let realm = try Realm()
       try realm.write({ () -> Void in
         realm.add(Place)
-        print("Place Saved")
+//        print("Place Saved")
       })
     }
     catch
@@ -27,7 +27,7 @@ class PlaceDataController: NSObject
     }
   }
 
-  class func fetchAllPlaces() -> Results<PlaceItem>!
+  class func fetchAllPlaces() -> Results<PlaceItem>?
   {
     do
     {
@@ -55,4 +55,5 @@ class PlaceDataController: NSObject
       
     }
   }
+  
 }

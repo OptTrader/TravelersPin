@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import MapKit
 
 class PlaceItem: Object
 {
@@ -18,4 +19,21 @@ class PlaceItem: Object
   dynamic var comment: String? = nil
   dynamic var photo: NSData? = nil
   dynamic var rating: Int = 0
+  dynamic var latitude: Float = 0
+  dynamic var longitude: Float = 0
+  
+  // MARK: Map Annotation
+
+  var title: String! {
+    get {
+      return name
+    }
+  }
+  
+  var subtitle: String! {
+    get {
+      return address
+    }
+  }
+  
 }
