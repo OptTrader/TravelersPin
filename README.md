@@ -13,8 +13,8 @@ TravelersPin was my first ever app on the AppStore. While the app is very simila
 * Server side via CloudKit
 * Realm/CoreData
 * Maps
-* Images,
-* Camera
+* Images
+* Camera & Photo Library
 * Geolocation 
 
 In addition, I want to showcase some of my design skills. I want to thank **Design + Code** for showing me how important design is in order to become a more complete developer.
